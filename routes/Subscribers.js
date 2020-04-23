@@ -11,8 +11,8 @@ router.get('/',async (req,res)=>{
     }
 });
 
-router.get('/:id', (req,res)=>{
-    
+router.get('/:id',getSubscriber, (req,res)=>{
+    res.json(res.subscriber);
 });
 
 router.post('/',async (req,res)=>{
@@ -29,13 +29,48 @@ router.post('/',async (req,res)=>{
     }
 });
 
-router.patch('/:id',(req,res)=>{
-    
+router.patch('/:id',getSubscriber,async (req,res)=>{
+    if(req.body.userName != null)
+    {
+        res.subscriber.username = req.body.userName;
+    }
+    if(req.body.userChannel != null)
+    {
+        res.subscriber.userChannel = req.body.userChannel;
+    }
+
+    try {
+        const updateSubscriber = await res.subscriber.save();
+        res.json(updateSubscriber);
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
 });
 
-router.delete('/:id',(req,res)=>{
-    
+router.delete('/:id',getSubscriber, async (req,res)=>{
+    try {
+        await res.subscriber.remove();
+        res.json({ message: 'Subscriber was deleted!'})
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
 });
 
+
+async function getSubscriber(req,res,next)
+{
+    try {
+        subscriber = await Subscriber.findById(req.params.id);
+        if(subscriber == null)
+        {
+            return res.status(404).json({message: 'Subscriber not found'});
+        }
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+
+    res.subscriber = subscriber;
+    next();
+}
 
 module.exports = router;
